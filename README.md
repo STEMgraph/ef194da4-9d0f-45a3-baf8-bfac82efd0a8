@@ -1,51 +1,75 @@
 <!---
 {
-  "depends_on": [],
+  "id": "ef194da4-9d0f-45a3-baf8-bfac82efd0a8",
+  "depends_on": [
+    "AND",
+    "800c7dd9-5ccf-42c1-b9ea-c2764579cf5d",
+    "cc424af3-2bd7-491f-b678-89e18904bf58"
+  ],
   "author": "Stephan Bökelmann",
-  "first_used": "2025-03-17",
-  "keywords": ["learning", "exercises", "education", "practice"]
+  "first_used": "2025-06-12",
+  "keywords": ["assembly", "stack", "variables", "addresses", "x86_64", "GAS"]
 }
 --->
 
-# Learning Through Exercises
+# Comparing and Branching in C and Assembly
+
+> In this exercise you will explore how different types of comparisons and logical operations written in C are translated into x86\_64 assembly. You will compile a C program and inspect the resulting object file to discover how control flow and boolean logic emerge from instructions like `cmp`, `test`, and conditional jumps.
 
 ## Introduction
-Learning by doing is one of the most effective methods to acquire new knowledge and skills. Rather than passively consuming information, actively engaging in problem-solving fosters deeper understanding and long-term retention. By working through structured exercises, students can grasp complex concepts in a more intuitive and applicable way. This approach is particularly beneficial in technical fields like programming, mathematics, and engineering.
+
+When writing C code, it is common to use relational operators (`==`, `>=`, `!=`, etc.) to compare values, as well as logical (`||`, `&&`) and bitwise (`&`, `|`, `^`) expressions to make decisions. These operators appear deceptively simple, but in assembly, their evaluation requires manipulating CPU flags and branching explicitly based on those outcomes.
+
+At the hardware level, the CPU cannot evaluate high-level expressions directly. Instead, it uses dedicated instructions such as `cmp` (compare), `test` (bitwise AND for flags), and conditional jumps (`je`, `jne`, `jge`, etc.) to achieve the same result. The outcome of a comparison does not produce a value like `true` or `false` — instead, it sets one or more flags in the FLAGS register, which the CPU then uses to decide what to do next.
+
+In this exercise, you will write a simple C program containing various comparison and logical expressions, then compile and disassemble it to understand exactly how the compiler represents those constructs at the assembly level. Recognizing the structure of comparisons and control flow in compiled output is a foundational skill in reverse engineering, optimization, and systems programming.
 
 ### Further Readings and Other Sources
-- [The Importance of Practice in Learning](https://www.sciencedirect.com/science/article/pii/S036013151300062X)
-- "The Art of Learning" by Josh Waitzkin
-- [How to Learn Effectively: 5 Key Strategies](https://www.edutopia.org/article/5-research-backed-learning-strategies)
 
-## Tasks
-1. **Write a Summary**: Summarize the concept of "learning by doing" in 3-5 sentences.
-2. **Example Identification**: List three examples from your own experience where learning through exercises helped you understand a topic better.
-3. **Create an Exercise**: Design a simple exercise for a topic of your choice that someone else could use to practice.
-4. **Follow an Exercise**: Find an online tutorial that includes exercises and complete at least two of them.
-5. **Modify an Existing Exercise**: Take a basic problem from a textbook or online course and modify it to make it slightly more challenging.
-6. **Pair Learning**: Explain a concept to a partner and guide them through an exercise without giving direct answers.
-7. **Review Mistakes**: Look at an exercise you've previously completed incorrectly. Identify why the mistake happened and how to prevent it in the future.
-8. **Time Challenge**: Set a timer for 10 minutes and try to solve as many simple exercises as possible on a given topic.
-9. **Self-Assessment**: Create a checklist to evaluate your own performance in completing exercises effectively.
-10. **Reflect on Progress**: Write a short paragraph on how this structured approach to exercises has influenced your learning.
+* [https://en.wikibooks.org/wiki/X86\_Assembly/Control\_Flow](https://en.wikibooks.org/wiki/X86_Assembly/Control_Flow)
+* [https://godbolt.org/](https://godbolt.org/) (interactive compiler explorer)
+* [https://cs.lmu.edu/\~ray/notes/asm/](https://cs.lmu.edu/~ray/notes/asm/)
 
-<details>
-  <summary>Tip for Task 5</summary>
-  Try making small adjustments first, such as increasing the difficulty slightly or adding an extra constraint.
-</details>
+## Task
+
+### Write, Compile, and Disassemble
+
+Create a file `compare.c` with the following contents:
+
+```c
+#include <stdio.h>
+
+int main() {
+    int x = 10, y = 20;
+    if (x == y) printf("Equal\n");
+    if (x >= y) printf("x >= y\n");
+    if (x & y) printf("Bitwise AND true\n");
+    if (x || y) printf("Logical OR true\n");
+    return 0;
+}
+```
+
+Then compile and disassemble:
+
+```sh
+gcc -O0 -c compare.c -o compare.o
+objdump -d compare.o
+```
+
+### Inspect:
+
+* Look for `cmp` and `test` instructions — they evaluate relationships or bits.
+* Look for conditional jumps like `je`, `jge`, `jne` — these alter flow based on CPU flags.
+* Try matching each C `if` to a cluster of instructions in the `.text` section.
 
 ## Questions
-1. What are the main benefits of learning through exercises compared to passive learning?
-2. How do exercises improve long-term retention?
-3. Can you think of a subject where learning through exercises might be less effective? Why?
-4. What role does feedback play in learning through exercises?
-5. How can self-designed exercises improve understanding?
-6. Why is it beneficial to review past mistakes in exercises?
-7. How does explaining a concept to someone else reinforce your own understanding?
-8. What strategies can you use to stay motivated when practicing with exercises?
-9. How can timed challenges contribute to learning efficiency?
-10. How do exercises help bridge the gap between theory and practical application?
+
+1. What flag comparisons does `cmp` affect?
+2. How does `x == y` differ from `x & y` at the machine level?
+3. What register values are used in `test`?
+4. Can you match the structure of `if (x || y)` to specific jumps?
+5. What happens if you change `>=` to `<` and recompile?
 
 ## Advice
-Practice consistently and seek out diverse exercises that challenge different aspects of a topic. Combine exercises with reflection and feedback to maximize your learning efficiency. Don't hesitate to adapt exercises to fit your own needs and ensure that you're actively engaging with the material, rather than just going through the motions.
 
+Understanding how C comparisons compile down to conditional logic in assembly gives you deep insight into performance, branching, and binary behavior. Once you recognize the patterns, you’ll find them recurring in hand-written and compiler-generated assembly alike. Experiment with changing operators or adding `else` clauses to see how control structures evolve.
