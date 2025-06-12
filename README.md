@@ -22,7 +22,7 @@ When writing C code, it is common to use relational operators (`==`, `>=`, `!=`,
 
 At the hardware level, the CPU cannot evaluate high-level expressions directly. Instead, it uses dedicated instructions such as `cmp` (compare), `test` (bitwise AND for flags), and conditional jumps (`je`, `jne`, `jge`, etc.) to achieve the same result. The outcome of a comparison does not produce a value like `true` or `false` — instead, it sets one or more flags in the FLAGS register, which the CPU then uses to decide what to do next.
 
-In this exercise, you will write a simple C program containing various comparison and logical expressions, then compile and disassemble it to understand exactly how the compiler represents those constructs at the assembly level. Recognizing the structure of comparisons and control flow in compiled output is a foundational skill in reverse engineering, optimization, and systems programming.
+In this exercise, you will write a simple C program containing a variety of comparison and logic operations. You will compile and disassemble the output to correlate each construct in C with the instructions and branches produced in the generated assembly. By learning to read this low-level control flow, you build intuition for what your code really does under the hood.
 
 ### Further Readings and Other Sources
 
@@ -32,9 +32,9 @@ In this exercise, you will write a simple C program containing various compariso
 
 ## Task
 
-### Write, Compile, and Disassemble
+### 1. Relational Comparisons
 
-Create a file `compare.c` with the following contents:
+Write and compile the following program:
 
 ```c
 #include <stdio.h>
@@ -42,34 +42,77 @@ Create a file `compare.c` with the following contents:
 int main() {
     int x = 10, y = 20;
     if (x == y) printf("Equal\n");
+    if (x != y) printf("Not Equal\n");
     if (x >= y) printf("x >= y\n");
-    if (x & y) printf("Bitwise AND true\n");
-    if (x || y) printf("Logical OR true\n");
+    if (x < y)  printf("x < y\n");
     return 0;
 }
 ```
 
-Then compile and disassemble:
+Then run:
 
 ```sh
-gcc -O0 -c compare.c -o compare.o
-objdump -d compare.o
+gcc -O0 -c compare_rel.c -o compare_rel.o
+objdump -d compare_rel.o
 ```
 
-### Inspect:
+#### Observe:
 
-* Look for `cmp` and `test` instructions — they evaluate relationships or bits.
-* Look for conditional jumps like `je`, `jge`, `jne` — these alter flow based on CPU flags.
-* Try matching each C `if` to a cluster of instructions in the `.text` section.
+* Each `if` results in a `cmp` instruction followed by a conditional jump:
+
+  * `je` (jump if equal)
+  * `jne` (jump if not equal)
+  * `jge` (jump if greater or equal)
+  * `jl` (jump if less)
+
+Compare the branch labels and targets to the sequence of `printf` calls. Note how the compiler branches over them unless the condition is true.
+
+### 2. Bitwise and Logical Operators
+
+Write and compile this second example:
+
+```c
+#include <stdio.h>
+
+int main() {
+    int x = 10, y = 20;
+    if (x & y) printf("Bitwise AND true\n");
+    if (x | y) printf("Bitwise OR true\n");
+    if (x ^ y) printf("Bitwise XOR true\n");
+    if (x || y) printf("Logical OR true\n");
+    if (x && y) printf("Logical AND true\n");
+    return 0;
+}
+```
+
+Compile and disassemble:
+
+```sh
+gcc -O0 -c compare_logical.c -o compare_logical.o
+objdump -d compare_logical.o
+```
+
+#### Observe:
+
+* Bitwise expressions often use `test` or `or` or `xor` followed by `jne`.
+* Logical OR and AND often involve short-circuit patterns or sequential `test` with conditional branching.
+
+### Analysis Prompt
+
+For each `if` in both programs:
+
+* Identify the setup (`mov`, `cmp`, `test`, etc.)
+* Identify the branch (`je`, `jne`, `jg`, etc.)
+* Map back to the original C code line
 
 ## Questions
 
-1. What flag comparisons does `cmp` affect?
-2. How does `x == y` differ from `x & y` at the machine level?
-3. What register values are used in `test`?
-4. Can you match the structure of `if (x || y)` to specific jumps?
-5. What happens if you change `>=` to `<` and recompile?
+1. What flags do `cmp` and `test` manipulate?
+2. Why do bitwise operations use `test` instead of `cmp`?
+3. How are logical ORs (`||`) and ANDs (`&&`) implemented in terms of control flow?
+4. What instruction would be used for `if (!x)`?
+5. If `-O2` optimization is applied, does the structure simplify or become more complex?
 
 ## Advice
 
-Understanding how C comparisons compile down to conditional logic in assembly gives you deep insight into performance, branching, and binary behavior. Once you recognize the patterns, you’ll find them recurring in hand-written and compiler-generated assembly alike. Experiment with changing operators or adding `else` clauses to see how control structures evolve.
+Each type of comparison in C maps to a recognizable assembly idiom. For relational comparisons, `cmp` sets the stage and a conditional jump follows. For bitwise and logical evaluations, the compiler uses `test`, `or`, or `xor`, combined with `jne` or short-circuiting jumps. Once you’ve matched these patterns, you can reverse-engineer intent or design highly predictable branches for low-level programs.
