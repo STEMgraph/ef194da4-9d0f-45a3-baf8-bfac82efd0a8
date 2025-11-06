@@ -2,7 +2,6 @@
 {
   "id": "ef194da4-9d0f-45a3-baf8-bfac82efd0a8",
   "depends_on": [
-    "AND",
     "800c7dd9-5ccf-42c1-b9ea-c2764579cf5d",
     "cc424af3-2bd7-491f-b678-89e18904bf58"
   ],
